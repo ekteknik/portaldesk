@@ -1,4 +1,4 @@
-name: PortalDesk Windows x64 Test
+﻿name: PortalDesk Windows x64 Test
 
 on:
   workflow_dispatch:
@@ -226,7 +226,7 @@ jobs:
 
       - name: Set SODIUM_LIB_DIR (arm64)
         # libsodium-sys ships no arm64 Windows prebuilt lib; point it at the vcpkg-built one
-        # (only for arm64 Ã¢â‚¬â€ leaving it unset lets x64 use the crate's bundled lib).
+        # (only for arm64 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â leaving it unset lets x64 use the crate's bundled lib).
         if: ${{ matrix.job.arch == 'aarch64' }}
         shell: bash
         run: echo "SODIUM_LIB_DIR=$VCPKG_ROOT/installed/${{ matrix.job.vcpkg-triplet }}/lib" >> "$GITHUB_ENV"
@@ -312,5 +312,6 @@ jobs:
         with:
           name: rustdesk-unsigned-windows-${{ matrix.job.arch }}
           path: rustdesk
+
 
 
