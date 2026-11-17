@@ -2493,6 +2493,15 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
 }
 
 pub fn load_custom_client() {
+    *config::APP_NAME.write().unwrap() = "PortalDesk".to_owned();
+
+    {
+        let mut settings = config::DEFAULT_SETTINGS.write().unwrap();
+        settings.insert("custom-rendezvous-server".to_owned(), "37.148.212.231".to_owned());
+        settings.insert("relay-server".to_owned(), "37.148.212.231".to_owned());
+        settings.insert("key".to_owned(), "oCH0e+KGWfRIumPZBu1PnA2anxRFXQWSFzNG3u2N5hw=".to_owned());
+    }
+
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
