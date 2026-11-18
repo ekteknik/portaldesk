@@ -189,7 +189,15 @@ class _OnlineStatusWidgetState extends State<OnlineStatusWidget> {
 
 /// Connection page for connecting to a remote peer.
 class ConnectionPage extends StatefulWidget {
-  const ConnectionPage({Key? key}) : super(key: key);
+  const ConnectionPage({Key? key, this.portalMode = false,
+    this.portalScrollController, this.portalPeersKey, this.portalSummary,
+    this.portalHelp}) : super(key: key);
+
+  final bool portalMode;
+  final ScrollController? portalScrollController;
+  final GlobalKey? portalPeersKey;
+  final Widget? portalSummary;
+  final Widget? portalHelp;
 
   @override
   State<ConnectionPage> createState() => _ConnectionPageState();
@@ -304,6 +312,7 @@ class _ConnectionPageState extends State<ConnectionPage>
   @override
   Widget build(BuildContext context) {
     final isOutgoingOnly = bind.isOutgoingOnly();
+    if (widget.portalMode) return _buildPortalContent(context);
     return Column(
       children: [
         Expanded(
@@ -325,6 +334,41 @@ class _ConnectionPageState extends State<ConnectionPage>
     );
   }
 
+  Widget _buildPortalContent(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final surface = dark ? const Color(0xFF1C2839) : Colors.white;
+    final line = dark ? const Color(0xFF344358) : const Color(0xFFDEE5EF);
+    return Column(children: [
+      Expanded(child: SingleChildScrollView(
+        controller: widget.portalScrollController,
+        padding: const EdgeInsets.all(14),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _buildRemoteIDTextField(context),
+          const SizedBox(height: 12),
+          if (widget.portalSummary != null) widget.portalSummary!,
+          const SizedBox(height: 12),
+          Container(
+            key: widget.portalPeersKey,
+            height: 320,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: surface, border: Border.all(color: line),
+                borderRadius: BorderRadius.circular(12)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(translate('Recent sessions'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 10),
+              Expanded(child: PeerTabPage()),
+            ]),
+          ),
+          if (widget.portalHelp != null) widget.portalHelp!,
+          Padding(padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Text('PortalDesk  |  e-imzaPortal  ·  Powered by RustDesk',
+                style: Theme.of(context).textTheme.bodySmall)),
+        ]),
+      )),
+      Container(color: surface, child: OnlineStatusWidget()),
+    ]);
+  }
+
   /// Callback for the connect button.
   /// Connects to the selected peer.
   void onConnect(
@@ -344,11 +388,16 @@ class _ConnectionPageState extends State<ConnectionPage>
   /// Search for a peer.
   Widget _buildRemoteIDTextField(BuildContext context) {
     var w = Container(
-      width: 320 + 20 * 2,
+      width: widget.portalMode ? double.infinity : 320 + 20 * 2,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 22),
       decoration: BoxDecoration(
+          color: widget.portalMode ? (Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1C2839) : Colors.white) : null,
           borderRadius: const BorderRadius.all(Radius.circular(13)),
-          border: Border.all(color: Theme.of(context).colorScheme.background)),
+          border: Border.all(color: widget.portalMode
+              ? (Theme.of(context).brightness == Brightness.dark
+                  ? const Color(0xFF344358) : const Color(0xFFDEE5EF))
+              : Theme.of(context).colorScheme.background)),
       child: Ink(
         child: Column(
           children: [
@@ -519,18 +568,22 @@ class _ConnectionPageState extends State<ConnectionPage>
               padding: const EdgeInsets.only(top: 13.0),
               child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 SizedBox(
-                  height: 28.0,
+                  height: widget.portalMode ? 40.0 : 28.0,
                   child: ElevatedButton(
                     onPressed: () {
                       onConnect();
                     },
+                    style: widget.portalMode ? ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0968E8), foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))) : null,
                     child: Text(translate("Connect")),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  height: 28.0,
-                  width: 28.0,
+                  height: widget.portalMode ? 40.0 : 28.0,
+                  width: widget.portalMode ? 40.0 : 28.0,
                   decoration: BoxDecoration(
                     border: Border.all(color: Theme.of(context).dividerColor),
                     borderRadius: BorderRadius.circular(8),
@@ -621,6 +674,6 @@ class _ConnectionPageState extends State<ConnectionPage>
       ),
     );
     return Container(
-        constraints: const BoxConstraints(maxWidth: 600), child: w);
+        constraints: BoxConstraints(maxWidth: widget.portalMode ? double.infinity : 600), child: w);
   }
 }

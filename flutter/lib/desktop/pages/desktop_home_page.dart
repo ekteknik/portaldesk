@@ -59,6 +59,9 @@ class _DesktopHomePageState extends State<DesktopHomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final isIncomingOnly = bind.isIncomingOnly();
+    if (!isIncomingOnly && !bind.isOutgoingOnly() && isWindows) {
+      return _buildBlock(child: _portalDashboard(context));
+    }
     return _buildBlock(
         child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,6 +71,155 @@ class _DesktopHomePageState extends State<DesktopHomePage>
         if (!isIncomingOnly) Expanded(child: buildRightPane(context)),
       ],
     ));
+  }
+
+  final _portalScroll = ScrollController();
+  final _portalPeers = GlobalKey();
+
+  Widget _portalDashboard(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = dark ? const Color(0xFF121B2A) : const Color(0xFFF3F6FB);
+    final surface = dark ? const Color(0xFF1C2839) : Colors.white;
+    final line = dark ? const Color(0xFF344358) : const Color(0xFFDEE5EF);
+    final ink = dark ? const Color(0xFFE7EEF9) : const Color(0xFF14243B);
+    const blue = Color(0xFF0968E8);
+    Widget nav(IconData icon, String label, VoidCallback action,
+        {bool selected = false, bool compact = false}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        child: Material(
+          color: selected ? blue.withOpacity(dark ? .24 : .11) : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(9),
+            onTap: action,
+            child: Tooltip(
+              message: label,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12, vertical: 13),
+                child: Row(children: [
+                  Icon(icon, size: 19, color: selected ? (dark ? const Color(0xFF8DBBFF) : blue) : ink),
+                  if (!compact) ...[
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(label, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: ink, fontWeight: selected ? FontWeight.w600 : FontWeight.w400))),
+                  ],
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+    void settings(SettingsTabKey key) => DesktopSettingPage.switch2page(key);
+    void goHome() {
+      if (_portalScroll.hasClients) {
+        _portalScroll.animateTo(0, duration: const Duration(milliseconds: 220), curve: Curves.easeOut);
+      }
+    }
+    void goPeers() {
+      final target = _portalPeers.currentContext;
+      if (target != null) Scrollable.ensureVisible(target,
+          duration: const Duration(milliseconds: 220), alignment: 0.05);
+    }
+    final tabs = DesktopSettingPage.tabKeys;
+    return LayoutBuilder(builder: (context, constraints) {
+      final compact = constraints.maxWidth < 880;
+      return ColoredBox(
+        color: bg,
+        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(
+            width: compact ? 58 : 180,
+            decoration: BoxDecoration(color: surface,
+                border: Border(right: BorderSide(color: line))),
+            child: SingleChildScrollView(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+                  child: Row(children: [loadIcon(28), if (!compact) ...[
+                    const SizedBox(width: 8),
+                    Expanded(child: Text('PortalDesk', style: TextStyle(color: ink,
+                        fontSize: 17, fontWeight: FontWeight.w800))),
+                  ]]),
+                ),
+                nav(Icons.home_outlined, translate('Home'), goHome, selected: true, compact: compact),
+                nav(Icons.devices_outlined, translate('Recent sessions'), goPeers, compact: compact),
+                if (tabs.contains(SettingsTabKey.network))
+                  nav(Icons.hub_outlined, translate('Network'), () => settings(SettingsTabKey.network), compact: compact),
+                if (tabs.contains(SettingsTabKey.safety))
+                  nav(Icons.shield_outlined, translate('Security'), () => settings(SettingsTabKey.safety), compact: compact),
+                if (tabs.contains(SettingsTabKey.general))
+                  nav(Icons.settings_outlined, translate('Settings'), () => settings(SettingsTabKey.general), compact: compact),
+                nav(Icons.info_outline, translate('About'), () => settings(SettingsTabKey.about), compact: compact),
+                if (!compact) Padding(padding: const EdgeInsets.all(16), child: loadPowered(context)),
+              ],
+            )),
+          ),
+          Expanded(child: ConnectionPage(
+            portalMode: true,
+            portalScrollController: _portalScroll,
+            portalPeersKey: _portalPeers,
+            portalSummary: _portalSummary(context, surface, line, ink),
+            portalHelp: Obx(() => buildHelpCards(stateGlobal.updateUrl.value)),
+          )),
+        ]),
+      );
+    });
+  }
+
+  Widget _portalSummary(BuildContext context, Color surface, Color line, Color ink) {
+    Widget card(Widget child) => Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: surface, borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: line)),
+      child: child,
+    );
+    Widget heading(IconData icon, String label) => Row(children: [
+      Icon(icon, color: const Color(0xFF0968E8), size: 22),
+      const SizedBox(width: 9),
+      Expanded(child: Text(label, style: TextStyle(color: ink, fontSize: 16, fontWeight: FontWeight.w700))),
+    ]);
+    Widget action(IconData icon, String text, VoidCallback onTap) =>
+        OutlinedButton.icon(onPressed: onTap, icon: Icon(icon, size: 18),
+            label: Text(text, overflow: TextOverflow.ellipsis),
+            style: OutlinedButton.styleFrom(alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
+    final identity = card(ChangeNotifierProvider.value(value: gFFI.serverModel,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        heading(Icons.desktop_windows_outlined, translate('Your Desktop')),
+        const SizedBox(height: 6),
+        Text(translate('desk_tip'), style: Theme.of(context).textTheme.bodySmall),
+        buildPresetPasswordWarning(),
+        const SizedBox(height: 8),
+        buildIDBoard(context),
+        buildPasswordBoard(context),
+      ]),
+    ));
+    final quick = card(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      heading(Icons.bolt_outlined, 'PortalDesk'),
+      const SizedBox(height: 12),
+      action(Icons.copy_outlined, '${translate('ID')} · ${translate('Copy')}', () {
+        Clipboard.setData(ClipboardData(text: gFFI.serverModel.serverId.text));
+        showToast(translate('Copied'));
+      }),
+      if (DesktopSettingPage.tabKeys.contains(SettingsTabKey.network)) ...[
+        const SizedBox(height: 8),
+        action(Icons.hub_outlined, translate('Network'), () => DesktopSettingPage.switch2page(SettingsTabKey.network)),
+      ],
+      if (DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety)) ...[
+        const SizedBox(height: 8),
+        action(Icons.shield_outlined, translate('Security'), () => DesktopSettingPage.switch2page(SettingsTabKey.safety)),
+      ],
+    ]));
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth < 580) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [identity, const SizedBox(height: 12), quick]);
+      }
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: identity), const SizedBox(width: 12), Expanded(child: quick),
+      ]);
+    });
   }
 
   Widget _buildBlock({required Widget child}) {
@@ -612,8 +764,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  Color.fromARGB(255, 226, 66, 188),
-                  Color.fromARGB(255, 244, 114, 124),
+                  Color(0xFF183B66),
+                  Color(0xFF245D91),
                 ],
               )),
               padding: EdgeInsets.all(20),
@@ -871,6 +1023,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   @override
   void dispose() {
+    _portalScroll.dispose();
     _uniLinksSubscription?.cancel();
     Get.delete<RxBool>(tag: 'stop-service');
     _updateTimer?.cancel();
