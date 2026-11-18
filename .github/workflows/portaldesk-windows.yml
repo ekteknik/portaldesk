@@ -297,3 +297,22 @@ jobs:
         with:
           name: rustdesk-unsigned-windows-${{ matrix.job.arch }}
           path: rustdesk
+
+      - name: Build PortalDesk portable EXE
+        shell: bash
+        run: |
+          set -e
+          sed -i '/dpiAware/d' res/manifest.xml
+          pushd ./libs/portable
+          pip3 install -r requirements.txt
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          popd
+          mkdir -p ./PortalDeskOutput
+          cp ./target/release/rustdesk-portable-packer.exe ./PortalDeskOutput/PortalDesk.exe
+
+      - name: Upload PortalDesk EXE
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: PortalDesk-Windows-x64
+          path: PortalDeskOutput/PortalDesk.exe
+          if-no-files-found: error
