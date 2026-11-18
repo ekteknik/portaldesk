@@ -22,6 +22,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:window_size/window_size.dart' as window_size;
 
 import 'common.dart';
 import 'consts.dart';
@@ -133,6 +134,10 @@ Future<void> initEnv(String appType) async {
 void runMainApp(bool startService) async {
   // register uni links
   await initEnv(kAppTypeMain);
+  if (isWindows && bind.mainGetLocalOption(key: 'portaldesk-ui-v2-theme') != 'Y') {
+    await bind.mainSetLocalOption(key: kCommConfKeyTheme, value: 'light');
+    await bind.mainSetLocalOption(key: 'portaldesk-ui-v2-theme', value: 'Y');
+  }
   checkUpdate();
   // trigger connection status updater
   await bind.mainCheckConnectStatus();
@@ -155,6 +160,19 @@ void runMainApp(bool startService) async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     // Restore the location of the main window before window hide or show.
     await restoreWindowPosition(WindowType.Main);
+    if (isWindows && !bind.isIncomingOnly() && !bind.isOutgoingOnly()) {
+      try {
+        final bounds = await windowManager.getBounds();
+        final screens = await window_size.getScreenList();
+        if (screens.isNotEmpty && (bounds.width < 1050 || bounds.height < 720)) {
+          final screen = screens.firstWhere((s) => s.visibleFrame.contains(bounds.center), orElse: () => screens.first);
+          final frame = screen.visibleFrame;
+          final width = 1100.0.clamp(0.0, frame.width).toDouble();
+          final height = 800.0.clamp(0.0, frame.height).toDouble();
+          await windowManager.setBounds(Rect.fromCenter(center: frame.center, width: width, height: height));
+        }
+      } catch (e) { debugPrint('PortalDesk window size: $e'); }
+    }
     // Check the startup argument, if we successfully handle the argument, we keep the main window hidden.
     final handledByUniLinks = await initUniLinks();
     debugPrint("handled by uni links: $handledByUniLinks");

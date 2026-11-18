@@ -78,7 +78,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
 
   Widget _portalDashboard(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? const Color(0xFF121B2A) : const Color(0xFFF3F6FB);
+    final bg = dark ? const Color(0xFF121B2A) : const Color(0xFFF4F6FA);
     final surface = dark ? const Color(0xFF1C2839) : Colors.white;
     final line = dark ? const Color(0xFF344358) : const Color(0xFFDEE5EF);
     final ink = dark ? const Color(0xFFE7EEF9) : const Color(0xFF14243B);
@@ -124,12 +124,12 @@ class _DesktopHomePageState extends State<DesktopHomePage>
     }
     final tabs = DesktopSettingPage.tabKeys;
     return LayoutBuilder(builder: (context, constraints) {
-      final compact = constraints.maxWidth < 880;
+      final compact = constraints.maxWidth < 650;
       return ColoredBox(
         color: bg,
         child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Container(
-            width: compact ? 58 : 180,
+            width: compact ? 58 : 205,
             decoration: BoxDecoration(color: surface,
                 border: Border(right: BorderSide(color: line))),
             child: SingleChildScrollView(child: Column(
@@ -143,7 +143,8 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                   ]]),
                 ),
                 nav(Icons.home_outlined, translate('Home'), goHome, selected: true, compact: compact),
-                nav(Icons.devices_outlined, translate('Recent sessions'), goPeers, compact: compact),
+                nav(Icons.devices_outlined, 'Cihazlar', goPeers, compact: compact),
+                nav(Icons.history, 'Geçmiş', goPeers, compact: compact),
                 if (tabs.contains(SettingsTabKey.network))
                   nav(Icons.hub_outlined, translate('Network'), () => settings(SettingsTabKey.network), compact: compact),
                 if (tabs.contains(SettingsTabKey.safety))
@@ -151,7 +152,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
                 if (tabs.contains(SettingsTabKey.general))
                   nav(Icons.settings_outlined, translate('Settings'), () => settings(SettingsTabKey.general), compact: compact),
                 nav(Icons.info_outline, translate('About'), () => settings(SettingsTabKey.about), compact: compact),
-                if (!compact) Padding(padding: const EdgeInsets.all(16), child: loadPowered(context)),
+                if (!compact) Padding(padding: const EdgeInsets.fromLTRB(18, 22, 18, 12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Bir e-imzaPortal teknolojisi', style: TextStyle(color: ink, fontSize: 11)), const SizedBox(height: 8), loadPowered(context)])),
               ],
             )),
           ),
@@ -187,7 +188,7 @@ class _DesktopHomePageState extends State<DesktopHomePage>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))));
     final identity = card(ChangeNotifierProvider.value(value: gFFI.serverModel,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        heading(Icons.desktop_windows_outlined, translate('Your Desktop')),
+        heading(Icons.desktop_windows_outlined, 'Sizin Masaüstünüz'),
         const SizedBox(height: 6),
         Text(translate('desk_tip'), style: Theme.of(context).textTheme.bodySmall),
         buildPresetPasswordWarning(),
@@ -197,9 +198,11 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       ]),
     ));
     final quick = card(Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      heading(Icons.bolt_outlined, 'PortalDesk'),
+      heading(Icons.bolt_outlined, 'Hızlı İşlemler'),
+      const SizedBox(height: 5),
+      Text('Sık kullanılan işlemlere hızlıca erişin.', style: Theme.of(context).textTheme.bodySmall),
       const SizedBox(height: 12),
-      action(Icons.copy_outlined, '${translate('ID')} · ${translate('Copy')}', () {
+      action(Icons.copy_outlined, 'Kimliği Kopyala', () {
         Clipboard.setData(ClipboardData(text: gFFI.serverModel.serverId.text));
         showToast(translate('Copied'));
       }),
@@ -209,11 +212,23 @@ class _DesktopHomePageState extends State<DesktopHomePage>
       ],
       if (DesktopSettingPage.tabKeys.contains(SettingsTabKey.safety)) ...[
         const SizedBox(height: 8),
-        action(Icons.shield_outlined, translate('Security'), () => DesktopSettingPage.switch2page(SettingsTabKey.safety)),
+        action(Icons.shield_outlined, 'Güvenlik / Erişim', () => DesktopSettingPage.switch2page(SettingsTabKey.safety)),
       ],
+      const SizedBox(height: 14),
+      Divider(color: line),
+      heading(Icons.monitor_heart_outlined, 'Sistem Durumu'),
+      const SizedBox(height: 8),
+      Obx(() {
+        final ready = !svcStopped.value && stateGlobal.svcStatus.value == SvcStatus.ready;
+        return Row(children: [
+          Icon(Icons.circle, size: 10, color: ready ? Colors.green : Colors.orange),
+          const SizedBox(width: 8),
+          Expanded(child: Text(ready ? 'Bağlantıya hazır' : 'Bağlantı hazır değil')),
+        ]);
+      }),
     ]));
     return LayoutBuilder(builder: (context, constraints) {
-      if (constraints.maxWidth < 580) {
+      if (constraints.maxWidth < 540) {
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [identity, const SizedBox(height: 12), quick]);
       }
       return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [

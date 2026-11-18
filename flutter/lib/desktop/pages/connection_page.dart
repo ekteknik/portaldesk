@@ -343,18 +343,34 @@ class _ConnectionPageState extends State<ConnectionPage>
         controller: widget.portalScrollController,
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _buildRemoteIDTextField(context),
+          LayoutBuilder(builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 710;
+            if (!wide) return _buildRemoteIDTextField(context);
+            return Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(color: surface, border: Border.all(color: line), borderRadius: BorderRadius.circular(13)),
+              child: Row(children: [
+                Container(width: 126, height: 124,
+                  decoration: BoxDecoration(color: const Color(0xFF0968E8).withOpacity(.09), borderRadius: BorderRadius.circular(16)),
+                  child: const Center(child: Icon(Icons.desktop_windows_outlined, size: 66, color: Color(0xFF0968E8)))),
+                const SizedBox(width: 15),
+                Expanded(child: _buildRemoteIDTextField(context)),
+              ]),
+            );
+          }),
           const SizedBox(height: 12),
           if (widget.portalSummary != null) widget.portalSummary!,
           const SizedBox(height: 12),
           Container(
             key: widget.portalPeersKey,
-            height: 320,
+            height: 270,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: surface, border: Border.all(color: line),
                 borderRadius: BorderRadius.circular(12)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(translate('Recent sessions'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+              const Row(children: [Icon(Icons.history, color: Color(0xFF0968E8)), SizedBox(width: 8), Text('Son Cihazlar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700))]),
+              const SizedBox(height: 4),
+              Text('Yakın zamanda bağlandığınız cihazlar.', style: Theme.of(context).textTheme.bodySmall),
               const SizedBox(height: 10),
               Expanded(child: PeerTabPage()),
             ]),
@@ -401,7 +417,8 @@ class _ConnectionPageState extends State<ConnectionPage>
       child: Ink(
         child: Column(
           children: [
-            getConnectionPageTitle(context, false).marginOnly(bottom: 15),
+            getConnectionPageTitle(context, false).marginOnly(bottom: widget.portalMode ? 5 : 15),
+            if (widget.portalMode) Align(alignment: Alignment.centerLeft, child: Text('Başka bir cihaza güvenli şekilde bağlanın.', style: Theme.of(context).textTheme.bodySmall)).marginOnly(bottom: 12),
             Row(
               children: [
                 Expanded(
