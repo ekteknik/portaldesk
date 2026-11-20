@@ -3,6 +3,8 @@
 #include <tchar.h>
 #include <uni_links_desktop/uni_links_desktop_plugin.h>
 #include <windows.h>
+#include <shobjidl.h>
+#pragma comment(lib, "Shell32.lib")
 
 #include <algorithm>
 #include <iostream>
@@ -27,6 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   if (auto result = service_control::HandleCommand(command_line)) {
     return static_cast<int>(*result);
   }
+  SetCurrentProcessExplicitAppUserModelID(L"eimzaPortal.PortalDesk");
   HINSTANCE hInstance = LoadLibraryA("librustdesk.dll");
   if (!hInstance)
   {
@@ -84,7 +87,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
         command_line_arguments.end());
   }
 
-  std::wstring app_name = L"RustDesk";
+  std::wstring app_name = L"PortalDesk";
   FUNC_RUSTDESK_GET_APP_NAME get_rustdesk_app_name = (FUNC_RUSTDESK_GET_APP_NAME)GetProcAddress(hInstance, "get_rustdesk_app_name");
   if (get_rustdesk_app_name) {
     wchar_t app_name_buffer[512] = {0};

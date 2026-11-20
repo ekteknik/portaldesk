@@ -305,7 +305,8 @@ jobs:
           sed -i '/dpiAware/d' res/manifest.xml
           pushd ./libs/portable
           pip3 install -r requirements.txt
-          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          mv ../../rustdesk/rustdesk.exe ../../rustdesk/PortalDesk.exe
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/PortalDesk.exe
           popd
           mkdir -p ./PortalDeskOutput
           cp ./target/release/rustdesk-portable-packer.exe ./PortalDeskOutput/PortalDesk.exe
@@ -316,3 +317,21 @@ jobs:
           name: PortalDesk-Windows-x64
           path: PortalDeskOutput/PortalDesk.exe
           if-no-files-found: error
+
+      - name: Verify PortalDesk branding
+        shell: pwsh
+        run: |
+          $files = @(
+            "./rustdesk/PortalDesk.exe",
+            "./PortalDeskOutput/PortalDesk.exe"
+          )
+          foreach ($file in $files) {
+            $info = (Get-Item $file -ErrorAction Stop).VersionInfo
+            if ($info.ProductName -ne "PortalDesk") {
+              throw "Invalid product name: $file"
+            }
+            if ($info.FileDescription -notlike "PortalDesk*") {
+              throw "Invalid file description: $file"
+            }
+          }
+          Write-Host "PORTALDESK BRANDING VERIFIED"
