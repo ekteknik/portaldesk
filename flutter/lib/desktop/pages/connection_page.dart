@@ -377,7 +377,7 @@ class _ConnectionPageState extends State<ConnectionPage>
           ),
           if (widget.portalHelp != null) widget.portalHelp!,
           Padding(padding: const EdgeInsets.symmetric(vertical: 14),
-            child: Text('PortalDesk  |  e-imzaPortal  ·  Powered by RustDesk',
+            child: Text('PortalDesk  |  e-imzaPortal',
                 style: Theme.of(context).textTheme.bodySmall)),
         ]),
       )),

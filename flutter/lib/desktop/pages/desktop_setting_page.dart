@@ -2617,7 +2617,7 @@ class _AboutState extends State<_About> {
                       .marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://rustdesk.com/privacy.html');
+                    launchUrlString('https://e-imzaportal.com/gizlilik');
                   },
                   child: Text(
                     translate('Privacy Statement'),
@@ -2625,7 +2625,7 @@ class _AboutState extends State<_About> {
                   ).marginSymmetric(vertical: 4.0)),
               InkWell(
                   onTap: () {
-                    launchUrlString('https://rustdesk.com');
+                    launchUrlString('https://e-imzaportal.com');
                   },
                   child: Text(
                     translate('Website'),
@@ -2643,8 +2643,22 @@ class _AboutState extends State<_About> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license',
+                            'PortalDesk © ${DateTime.now().toString().substring(0, 4)} e-imzaPortal',
                             style: const TextStyle(color: Colors.white),
+                          ),
+                          Text(
+                            'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license',
+                            style: const TextStyle(color: Colors.white70, fontSize: 10),
+                          ),
+                          InkWell(
+                            onTap: () => launchUrlString('https://www.gnu.org/licenses/agpl-3.0.html'),
+                            child: const Text('Açık Kaynak Lisansları (AGPL-3.0)',
+                              style: TextStyle(color: Colors.white70, fontSize: 10, decoration: TextDecoration.underline)),
+                          ),
+                          InkWell(
+                            onTap: () => launchUrlString('https://github.com/ekteknik/portaldesk/tree/portaldesk-brand'),
+                            child: const Text('Kaynak kodu',
+                              style: TextStyle(color: Colors.white70, fontSize: 10, decoration: TextDecoration.underline)),
                           ),
                           Text(
                             translate('Slogan_tip'),
